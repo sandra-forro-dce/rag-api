@@ -42,6 +42,8 @@ RUN pipenv sync --dev
 
 # ✅ Add your app code (this was missing!)
 COPY --chown=app:app . /app
+COPY --chown=app:app tests/ /app/tests/
+
 
 # Make entrypoint script executable (if used)
 RUN chmod +x /app/docker-entrypoint.sh
