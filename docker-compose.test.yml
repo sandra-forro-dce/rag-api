@@ -31,7 +31,6 @@ services:
     volumes:
       - ../secrets:/secrets:ro
       - ./rag:/app
-      - ./tests:/app/tests
     working_dir: /app
     entrypoint: ""
     command: ["pipenv", "run", "uvicorn", "rag:app", "--host", "0.0.0.0", "--port", "9000"]
