@@ -1,4 +1,3 @@
-
 services:
   chromadb:
     image: chromadb/chroma:latest
@@ -12,7 +11,11 @@ services:
       - ANONYMIZED_TELEMETRY=FALSE
       - CHROMA_SERVER_CORS_ALLOW_ORIGINS=["*"]
 
+
   rag-test:
+    build:
+      context: ./rag    # or the folder where your Dockerfile lives
+      dockerfile: Dockerfile
     image: couchgpt-rag-cli
     container_name: rag-test
     depends_on:
@@ -24,6 +27,7 @@ services:
       GOOGLE_APPLICATION_CREDENTIALS: ${GOOGLE_APPLICATION_CREDENTIALS}
       CHROMADB_HOST: couchgpt-rag-chromadb
       CHROMADB_PORT: 8004
+      RAG_ENV: test
     volumes:
       - ../secrets:/secrets:ro
       - ./rag:/app
@@ -31,4 +35,3 @@ services:
     working_dir: /app
     entrypoint: ""
     command: ["pipenv", "run", "uvicorn", "rag:app", "--host", "0.0.0.0", "--port", "9000"]
-
