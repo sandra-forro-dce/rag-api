@@ -37,7 +37,8 @@ WORKDIR /app
 
 # Install Python dependencies
 COPY --chown=app:app Pipfile Pipfile.lock /app/
-RUN pipenv sync
+RUN pipenv sync --dev
+
 
 # ✅ Add your app code (this was missing!)
 COPY --chown=app:app . /app
