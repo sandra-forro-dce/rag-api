@@ -1,0 +1,34 @@
+
+services:
+  chromadb:
+    image: chromadb/chroma:latest
+    container_name: couchgpt-rag-chromadb
+    ports:
+      - "8002:8004"
+    volumes:
+      - ./docker-volumes/chromadb:/chroma/chroma
+    environment:
+      - IS_PERSISTENT=TRUE
+      - ANONYMIZED_TELEMETRY=FALSE
+      - CHROMA_SERVER_CORS_ALLOW_ORIGINS=["*"]
+
+  rag-test:
+    image: couchgpt-rag-cli
+    container_name: rag-test
+    depends_on:
+      - chromadb
+    ports:
+      - "8088:9000"
+    environment:
+      GCP_PROJECT: ${GCP_PROJECT}
+      GOOGLE_APPLICATION_CREDENTIALS: ${GOOGLE_APPLICATION_CREDENTIALS}
+      CHROMADB_HOST: couchgpt-rag-chromadb
+      CHROMADB_PORT: 8004
+    volumes:
+      - ../secrets:/secrets:ro
+      - ./rag:/app
+      - ./tests:/app/tests
+    working_dir: /app
+    entrypoint: ""
+    command: ["pipenv", "run", "uvicorn", "rag:app", "--host", "0.0.0.0", "--port", "9000"]
+

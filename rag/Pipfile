@@ -1,0 +1,17 @@
+[dev-packages]
+pytest = "*"
+
+[packages]
+user-agent = "*"
+requests = "*"
+google-cloud-storage = "*"
+google-generativeai = "*"
+google-cloud-aiplatform = "*"
+pandas = "*"
+langchain = "*"
+llama-index = "*"
+langchain-community = "*"
+chromadb = "*"
+fastapi = "*"
+pydantic = "*"
+uvicorn = "*"

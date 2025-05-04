@@ -1,0 +1,80 @@
+networks:
+    default:
+        name: couchgpt
+        external: false
+
+services:
+    rag:
+        build:
+            context: ./rag
+            dockerfile: Dockerfile
+        image: couchgpt-rag-cli
+        container_name: couchgpt-rag-cli
+        volumes:
+            - ../secrets:/secrets
+            - ./rag:/app
+        ports:
+            - 8088:9000
+        environment:
+            GOOGLE_APPLICATION_CREDENTIALS: $GOOGLE_APPLICATION_CREDENTIALS
+            GCP_PROJECT: $GCP_PROJECT
+        volumes:
+            - ../secrets:/secrets:ro
+        entrypoint: /app/docker-entrypoint.sh
+        depends_on:
+            - chromadb
+    chromadb:
+        image: chromadb/chroma:latest
+        container_name: couchgpt-rag-chromadb
+        ports:
+            - 8002:8004
+        volumes:
+            - ./docker-volumes/chromadb:/chroma/chroma
+        environment:
+            - IS_PERSISTENT=TRUE
+            - ANONYMIZED_TELEMETRY=FALSE
+            - CHROMA_SERVER_CORS_ALLOW_ORIGINS=["*"] # This is not recommended for production environments.
+    sft:
+        build:
+            context: ./sft
+            dockerfile: Dockerfile
+        image: couchgpt-sft-cli
+        container_name: couchgpt-sft-cli
+        ports:
+            - 8086:9000
+        volumes:
+            - ../secrets:/secrets
+            - ./sft:/app
+        environment:
+            GOOGLE_APPLICATION_CREDENTIALS: $GOOGLE_APPLICATION_CREDENTIALS
+            GCP_PROJECT: $GCP_PROJECT
+        entrypoint: /app/docker-entrypoint.sh
+
+    agent:
+        build:
+            context: ./agent
+            dockerfile: Dockerfile
+        image: couchgpt-agent-cli
+        container_name: couchgpt-agent-cli
+        ports:
+            - 8000:8000
+        volumes:
+            - ./agent:/app
+        entrypoint: /app/docker-entrypoint.sh
+        depends_on:
+            - sfts
+            - rag
+    frontend:
+        build: 
+            context: ./frontend/frontend
+            dockerfile: Dockerfile
+        image: couchgpt-frontend 
+        ports:
+        - "3000:3000"
+        volumes:
+        - ./frontend/frontend:/app
+        - /app/node_modules
+        stdin_open: true
+        tty: true
+        depends_on:
+            - agent
