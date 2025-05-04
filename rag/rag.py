@@ -353,18 +353,20 @@ class RAGRequest(BaseModel):
     question: str
     method: str = "recursive-split"
 # @app.on_event("startup")
+
 @asynccontextmanager
 async def load_pre_reqs(app: FastAPI):
-	print('downloading resoures from GCP bucket')
-	download()
-	print('Chunking resources')
-	chunk(method='recursive-split')
-	print('Embedding resources')
-	embed(method='recursive-split')
-	print('Loading resources to ChromaDB')
-	load(method='recursive-split')
-	print('Ready to accept requests')
-	yield
+    if os.environ.get("RAG_ENV") == "test":
+        print("Skipping pipeline setup in test mode")
+        yield
+        return
+
+    print("downloading resources from GCP bucket")
+    download()
+    chunk(method='recursive-split')
+    embed(method='recursive-split')
+    load(method='recursive-split')
+    yield
 
 
 if os.environ.get("RAG_ENV") == "test":
