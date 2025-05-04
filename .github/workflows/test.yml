@@ -1,0 +1,21 @@
+name: RAG API Tests (No GCP Secrets)
+
+on: [push, pull_request]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repo
+      uses: actions/checkout@v3
+
+    - name: Build and start containers
+      run: docker-compose -f docker-compose.test.yml up -d --build
+
+    - name: Run tests inside rag-test container
+      run: docker exec rag-test pipenv run pytest tests/
+
+    - name: Tear down containers
+      if: always()
+      run: docker-compose -f docker-compose.test.yml down
