@@ -1,14 +1,14 @@
 import os
 import sys
 
-# ✅ Add /app to Python's import path
+
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
-# ✅ Set environment to disable startup pipeline
+
 os.environ["RAG_ENV"] = "test"
 
 from fastapi.testclient import TestClient
-from rag import app  # ✅ This will now work
+from rag import app  
 
 client = TestClient(app)
 

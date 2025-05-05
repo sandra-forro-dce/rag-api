@@ -149,34 +149,39 @@ def load_text_embeddings(df, collection, batch_size=500):
 	print(f"Finished inserting {total_inserted} items into collection '{collection.name}'")
 
 
-def download():
-    print("download")
+def download(max_files=None):
+    print("📥 Starting download")
 
-    # Clear
-    shutil.rmtree(os.path.join(INPUT_FOLDER, "books"), ignore_errors=True, onerror=None)
+    shutil.rmtree(os.path.join(INPUT_FOLDER, "books"), ignore_errors=True)
     os.makedirs(os.path.join(INPUT_FOLDER, "books"), exist_ok=True)
 
     client = storage.Client()
     bucket = client.get_bucket(GCP_BUCKET)
 
-    blobs = bucket.list_blobs(prefix="books/")
+    blobs = list(bucket.list_blobs(prefix="books/"))
+    count = 0
+
     for blob in blobs:
-        print(blob.name)
-        if not blob.name.endswith("/"):
-            blob.download_to_filename(blob.name)
+        if blob.name.endswith("/"):
+            continue
+        print(f"Downloading: {blob.name}")
+        blob.download_to_filename(blob.name)
+        count += 1
+        if max_files is not None and count >= max_files:
+            break
 
 
-def chunk(method="char-split"):
+
+def chunk(method="char-split", max_files=None):
 	print("chunk()")
 
-	# Make dataset folders
 	os.makedirs(OUTPUT_FOLDER, exist_ok=True)
 
-	# Get the list of text file
 	text_files = glob.glob(os.path.join(INPUT_FOLDER, "*.txt"))
+	if max_files:
+		text_files = text_files[:max_files]  
 	print("Number of files to process:", len(text_files))
 
-	# Process
 	for text_file in text_files:
 		print("Processing file:", text_file)
 		filename = os.path.basename(text_file)
@@ -184,33 +189,23 @@ def chunk(method="char-split"):
 
 		with open(text_file) as f:
 			input_text = f.read()
-		
+
 		text_chunks = None
 		if method == "char-split":
 			chunk_size = 350
 			chunk_overlap = 20
-			# Init the splitter
-			text_splitter = CharacterTextSplitter(chunk_size = chunk_size, chunk_overlap=chunk_overlap, separator='', strip_whitespace=False)
-
-			# Perform the splitting
+			text_splitter = CharacterTextSplitter(chunk_size=chunk_size, chunk_overlap=chunk_overlap, separator='', strip_whitespace=False)
 			text_chunks = text_splitter.create_documents([input_text])
-			text_chunks = [doc.page_content for doc in text_chunks]
-			print("Number of chunks:", len(text_chunks))
-
 		elif method == "recursive-split":
 			chunk_size = 350
-			# Init the splitter
-			text_splitter = RecursiveCharacterTextSplitter(chunk_size = chunk_size)
-
-			# Perform the splitting
+			text_splitter = RecursiveCharacterTextSplitter(chunk_size=chunk_size)
 			text_chunks = text_splitter.create_documents([input_text])
-			text_chunks = [doc.page_content for doc in text_chunks]
-			print("Number of chunks:", len(text_chunks))
-		
-		
-		if text_chunks is not None:
-			# Save the chunks
-			data_df = pd.DataFrame(text_chunks,columns=["chunk"])
+
+		text_chunks = [doc.page_content for doc in text_chunks]
+		print("Number of chunks:", len(text_chunks))
+
+		if text_chunks:
+			data_df = pd.DataFrame(text_chunks, columns=["chunk"])
 			data_df["book"] = book_name
 			print("Shape:", data_df.shape)
 			print(data_df.head())
@@ -220,34 +215,36 @@ def chunk(method="char-split"):
 				json_file.write(data_df.to_json(orient='records', lines=True))
 
 
-def embed(method="char-split"):
+def embed(method="char-split", max_chunks=None):
 	print("embed()")
 
-	# Get the list of chunk files
 	jsonl_files = glob.glob(os.path.join(OUTPUT_FOLDER, f"chunks-{method}-*.jsonl"))
 	print("Number of files to process:", len(jsonl_files))
 
-	# Process
 	for jsonl_file in jsonl_files:
 		print("Processing file:", jsonl_file)
 
 		data_df = pd.read_json(jsonl_file, lines=True)
+
+		if max_chunks:
+			data_df = data_df.head(max_chunks)  
+
 		print("Shape:", data_df.shape)
 		print(data_df.head())
 
 		chunks = data_df["chunk"].values
-		embeddings = generate_text_embeddings(chunks,EMBEDDING_DIMENSION, batch_size=100)
+		embeddings = generate_text_embeddings(chunks, EMBEDDING_DIMENSION, batch_size=100)
 		data_df["embedding"] = embeddings
 
 		time.sleep(5)
 
-		# Save 
 		print("Shape:", data_df.shape)
 		print(data_df.head())
 
-		jsonl_filename = jsonl_file.replace("chunks-","embeddings-")
+		jsonl_filename = jsonl_file.replace("chunks-", "embeddings-")
 		with open(jsonl_filename, "w") as json_file:
 			json_file.write(data_df.to_json(orient='records', lines=True))
+
 
 
 def load(method="char-split"):
@@ -357,11 +354,15 @@ class RAGRequest(BaseModel):
 @asynccontextmanager
 async def load_pre_reqs(app: FastAPI):
     if os.environ.get("RAG_ENV") == "test":
-        print("Skipping pipeline setup in test mode")
+        print("⚠️ RAG_ENV=test: Running lightweight setup for testing...")
+        download(max_files=2)
+        chunk(method="recursive-split", max_files=2)      
+        embed(method="recursive-split", max_chunks=5)      
+        load(method="recursive-split")
         yield
         return
 
-    print("downloading resources from GCP bucket")
+    print("⏬ Running full startup pipeline")
     download()
     chunk(method='recursive-split')
     embed(method='recursive-split')
@@ -369,10 +370,7 @@ async def load_pre_reqs(app: FastAPI):
     yield
 
 
-if os.environ.get("RAG_ENV") == "test":
-    app = FastAPI()  # ⛔ skip downloading + embedding
-else:
-    app = FastAPI(lifespan=load_pre_reqs)
+app = FastAPI(lifespan=load_pre_reqs)
 
 
 @app.post("/rag/str")

@@ -35,14 +35,14 @@ RUN set -ex; \
 USER app
 WORKDIR /app
 
-# Install Python dependencies
+# Copy dependency files first
 COPY --chown=app:app Pipfile Pipfile.lock /app/
-RUN pipenv sync --dev
 
-
-# ✅ Add your app code (this was missing!)
+# Copy the rest of the app (AFTER dependency files)
 COPY --chown=app:app . /app
-COPY --chown=app:app tests/ /app/tests/
+
+# Install Python dependencies including dev packages
+RUN pipenv sync --dev
 
 
 # Make entrypoint script executable (if used)

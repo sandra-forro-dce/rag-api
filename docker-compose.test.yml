@@ -29,7 +29,8 @@ services:
       CHROMADB_PORT: 8004
       RAG_ENV: test
     volumes:
-      - ../secrets:/secrets:ro
+      #- ../secrets:/secrets:ro
+      - ./secrets:/secrets:ro
       - ./rag:/app
     working_dir: /app
     entrypoint: ""

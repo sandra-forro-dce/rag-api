@@ -1,4 +1,4 @@
-name: RAG API Tests (No GCP Secrets)
+name: RAG API Tests (Integration)
 
 on: [push, pull_request]
 
@@ -6,9 +6,18 @@ jobs:
   test:
     runs-on: ubuntu-latest
 
+    env:
+      GCP_PROJECT: ${{ secrets.GCP_PROJECT }}
+      GOOGLE_APPLICATION_CREDENTIALS: /secrets/deployment.json
+
     steps:
     - name: Checkout repo
       uses: actions/checkout@v3
+
+    - name: Set up secrets
+      run: |
+        mkdir -p secrets
+        echo '${{ secrets.GOOGLE_CREDENTIALS_JSON }}' > secrets/deployment.json
 
     - name: Install Docker Compose
       run: |
@@ -19,8 +28,8 @@ jobs:
     - name: Build and start containers
       run: docker-compose -f docker-compose.test.yml up -d --build
 
-    - name: Run tests inside container with PYTHONPATH
-      run: docker exec rag-test bash -c "export PYTHONPATH=/app && pipenv run pytest tests/"
+    - name: Run tests inside container
+      run: docker exec rag-test pipenv run pytest tests/ -v
 
     - name: Tear down containers
       if: always()
