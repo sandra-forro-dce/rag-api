@@ -354,25 +354,28 @@ class RAGRequest(BaseModel):
 @asynccontextmanager
 async def load_pre_reqs(app: FastAPI):
     if os.environ.get("RAG_ENV") == "test":
-        print("⚠️ Test mode: Creating dummy collection with fake data")
+        print("⚠️ RAG_ENV=test: Inserting dummy collection for test mode")
         from chromadb import HttpClient
         client = HttpClient(host=CHROMADB_HOST, port=CHROMADB_PORT)
+
         collection_name = "recursive-split-collection"
         try:
             client.delete_collection(name=collection_name)
-        except:
+        except Exception:
             pass
+
         collection = client.create_collection(name=collection_name)
         collection.add(
             ids=["1"],
             documents=["Stress is a common issue."],
-            metadatas=[{"book": "dummy"}],
-            embeddings=[[0.1]*EMBEDDING_DIMENSION]
+            metadatas=[{"book": "Dummy"}],
+            embeddings=[[0.1]*256]  # low-dim dummy vector
         )
+
         yield
         return
 
-    # Full pipeline for real runs
+    # Regular pipeline
     download()
     chunk(method='recursive-split')
     embed(method='recursive-split')
