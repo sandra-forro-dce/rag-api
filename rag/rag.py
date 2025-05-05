@@ -355,8 +355,8 @@ class RAGRequest(BaseModel):
 async def load_pre_reqs(app: FastAPI):
     if os.environ.get("RAG_ENV") == "test":
         print("⚠️ RAG_ENV=test: Running lightweight setup for testing...")
-        download(max_files=2)
-        chunk(method="recursive-split", max_files=2)      
+        download(max_files=1)
+        chunk(method="recursive-split", max_files=1)      
         embed(method="recursive-split", max_chunks=5)      
         load(method="recursive-split")
         yield
