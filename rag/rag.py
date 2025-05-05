@@ -354,10 +354,14 @@ class RAGRequest(BaseModel):
 @asynccontextmanager
 async def load_pre_reqs(app: FastAPI):
     if os.environ.get("RAG_ENV") == "test":
-        print("⚠️ RAG_ENV=test: Running lightweight setup for testing...")
-        download(max_files=1)
-        chunk(method="recursive-split", max_files=1)      
-        embed(method="recursive-split", max_chunks=5)      
+        print("⚠️ RAG_ENV=test: Creating dummy text file for testing")
+        os.makedirs(INPUT_FOLDER, exist_ok=True)
+
+        with open(os.path.join(INPUT_FOLDER, "dummy_book.txt"), "w") as f:
+            f.write("Stress is a common psychological issue. People cope in various ways including relaxation and mindfulness.")
+
+        chunk(method="recursive-split")
+        embed(method="recursive-split")
         load(method="recursive-split")
         yield
         return

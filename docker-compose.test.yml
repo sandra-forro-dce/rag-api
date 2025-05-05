@@ -14,7 +14,7 @@ services:
 
   rag-test:
     build:
-      context: ./rag    # or the folder where your Dockerfile lives
+      context: ./rag
       dockerfile: Dockerfile
     image: couchgpt-rag-cli
     container_name: rag-test
@@ -23,14 +23,10 @@ services:
     ports:
       - "8088:9000"
     environment:
-      GCP_PROJECT: ${GCP_PROJECT}
-      GOOGLE_APPLICATION_CREDENTIALS: ${GOOGLE_APPLICATION_CREDENTIALS}
       CHROMADB_HOST: couchgpt-rag-chromadb
       CHROMADB_PORT: 8004
       RAG_ENV: test
     volumes:
-      #- ../secrets:/secrets:ro
-      - ./secrets:/secrets:ro
       - ./rag:/app
     working_dir: /app
     entrypoint: ""
