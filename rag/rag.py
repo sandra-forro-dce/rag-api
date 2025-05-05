@@ -354,19 +354,25 @@ class RAGRequest(BaseModel):
 @asynccontextmanager
 async def load_pre_reqs(app: FastAPI):
     if os.environ.get("RAG_ENV") == "test":
-        print("⚠️ RAG_ENV=test: Creating dummy text file for testing")
-        os.makedirs(INPUT_FOLDER, exist_ok=True)
-
-        with open(os.path.join(INPUT_FOLDER, "dummy_book.txt"), "w") as f:
-            f.write("Stress is a common psychological issue. People cope in various ways including relaxation and mindfulness.")
-
-        chunk(method="recursive-split")
-        embed(method="recursive-split")
-        load(method="recursive-split")
+        print("⚠️ Test mode: Creating dummy collection with fake data")
+        from chromadb import HttpClient
+        client = HttpClient(host=CHROMADB_HOST, port=CHROMADB_PORT)
+        collection_name = "recursive-split-collection"
+        try:
+            client.delete_collection(name=collection_name)
+        except:
+            pass
+        collection = client.create_collection(name=collection_name)
+        collection.add(
+            ids=["1"],
+            documents=["Stress is a common issue."],
+            metadatas=[{"book": "dummy"}],
+            embeddings=[[0.1]*EMBEDDING_DIMENSION]
+        )
         yield
         return
 
-    print("⏬ Running full startup pipeline")
+    # Full pipeline for real runs
     download()
     chunk(method='recursive-split')
     embed(method='recursive-split')
