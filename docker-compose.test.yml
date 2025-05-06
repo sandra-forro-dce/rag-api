@@ -28,9 +28,9 @@ services:
       - "8088:9000"
     env_file:
       - .env
-    volumes:
-      - ../secrets:/secrets:ro
-      - ./rag:/app
-    working_dir: /app
+  volumes:
+    - ./secrets:/secrets:ro  # ✅ FIXED: from ../secrets to ./secrets
+    - ./rag:/app
+      working_dir: /app
     entrypoint: ""
     command: ["pipenv", "run", "uvicorn", "rag:app", "--host", "0.0.0.0", "--port", "9000"]
