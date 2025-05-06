@@ -29,11 +29,13 @@ jobs:
     - name: Build and start containers
       run: docker-compose -f docker-compose.test.yml up -d --build
 
+    - name: Wait for chromadb health check
+      run: |
+        echo "Waiting for ChromaDB healthcheck..."
+        sleep 20
+
     - name: Show container logs if container crashes early
       run: docker logs rag-test || true
-
-    - name: Wait for app to initialize
-      run: sleep 10
 
     - name: Run integration tests
       run: docker exec rag-test pipenv run pytest tests/ -v
