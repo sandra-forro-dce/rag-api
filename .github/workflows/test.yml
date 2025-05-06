@@ -1,8 +1,6 @@
 name: RAG API Tests
 
-on:
-  push:
-  pull_request:
+on: [push, pull_request]
 
 jobs:
   test:
@@ -12,10 +10,15 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
 
+      - name: Write GCP credentials to file
+        run: |
+          mkdir -p secrets
+          echo "${{ secrets.GCP_KEY_JSON }}" > secrets/deployment.json
+
       - name: Create .env file from GitHub secrets
         run: |
           echo "GCP_PROJECT=${{ secrets.GCP_PROJECT }}" >> .env
-          echo "GOOGLE_APPLICATION_CREDENTIALS=${{ secrets.GOOGLE_APPLICATION_CREDENTIALS }}" >> .env
+          echo "GOOGLE_APPLICATION_CREDENTIALS=/secrets/deployment.json" >> .env
           echo "RAG_ENV=${{ secrets.RAG_ENV }}" >> .env
 
       - name: Install Docker Compose
@@ -29,7 +32,7 @@ jobs:
       - name: Wait for app to fully start
         run: sleep 10
 
-      - name: Show container logs if app crashes
+      - name: Show logs if app fails
         if: failure()
         run: docker logs rag-test
 
