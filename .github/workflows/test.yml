@@ -19,7 +19,7 @@ jobs:
     - name: Write GCP credentials file
       run: |
         mkdir -p secrets
-        echo "${{ secrets.GCP_KEY_JSON_B64 }}" | base64 -d > secrets/deployment.json
+        echo "${{ secrets.GOOGLE_CREDENTIALS_JSON }}" | base64 -d > secrets/deployment.json
         
     - name: Install Docker Compose
       run: |
