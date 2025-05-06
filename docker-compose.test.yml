@@ -13,7 +13,7 @@ services:
 
   rag-test:
     build:
-      context: ./rag       # Adjust if your Dockerfile is elsewhere
+      context: ./rag
       dockerfile: Dockerfile
     image: couchgpt-rag-cli
     container_name: rag-test
@@ -21,13 +21,8 @@ services:
       - chromadb
     ports:
       - "8088:9000"
-    environment:
-      - GCP_PROJECT=${GCP_PROJECT}
-      - GOOGLE_APPLICATION_CREDENTIALS=${GOOGLE_APPLICATION_CREDENTIALS}
-      - CHROMADB_HOST=couchgpt-rag-chromadb
-      - CHROMADB_PORT=8004
-      - RAG_ENV=${RAG_ENV}
-
+    env_file:
+      - .env
     volumes:
       - ../secrets:/secrets:ro
       - ./rag:/app
