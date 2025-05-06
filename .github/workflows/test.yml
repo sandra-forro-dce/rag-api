@@ -7,38 +7,37 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
+    - name: Checkout code
+      uses: actions/checkout@v3
 
-      - name: Write GCP credentials to file
-        run: |
-          mkdir -p secrets
-          echo "${{ secrets.GCP_KEY_JSON }}" > secrets/deployment.json
+    - name: Create .env file from GitHub secrets
+      run: |
+        echo "GCP_PROJECT=${{ secrets.GCP_PROJECT }}" >> .env
+        echo "GOOGLE_APPLICATION_CREDENTIALS=/secrets/deployment.json" >> .env
+        echo "RAG_ENV=${{ secrets.RAG_ENV }}" >> .env
 
-      - name: Create .env file from GitHub secrets
-        run: |
-          echo "GCP_PROJECT=${{ secrets.GCP_PROJECT }}" >> .env
-          echo "GOOGLE_APPLICATION_CREDENTIALS=/secrets/deployment.json" >> .env
-          echo "RAG_ENV=${{ secrets.RAG_ENV }}" >> .env
+    - name: Write GCP credentials file
+      run: |
+        mkdir -p secrets
+        echo '${{ secrets.GCP_KEY_JSON }}' > secrets/deployment.json
 
-      - name: Install Docker Compose
-        run: |
-          sudo curl -L "https://github.com/docker/compose/releases/latest/download/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
-          sudo chmod +x /usr/local/bin/docker-compose
+    - name: Install Docker Compose
+      run: |
+        sudo curl -L "https://github.com/docker/compose/releases/latest/download/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+        sudo chmod +x /usr/local/bin/docker-compose
 
-      - name: Build and start containers
-        run: docker-compose -f docker-compose.test.yml up -d --build
+    - name: Build and start containers
+      run: docker-compose -f docker-compose.test.yml up -d --build
 
-      - name: Wait for app to fully start
-        run: sleep 10
+    - name: Show container logs if container crashes early
+      run: docker logs rag-test || true
 
-      - name: Show logs if app fails
-        if: failure()
-        run: docker logs rag-test
+    - name: Wait for app to initialize
+      run: sleep 10
 
-      - name: Run integration tests
-        run: docker exec rag-test pipenv run pytest tests/ -v
+    - name: Run integration tests
+      run: docker exec rag-test pipenv run pytest tests/ -v
 
-      - name: Tear down containers
-        if: always()
-        run: docker-compose -f docker-compose.test.yml down
+    - name: Tear down containers
+      if: always()
+      run: docker-compose -f docker-compose.test.yml down
