@@ -27,8 +27,7 @@ services:
       - CHROMADB_HOST=couchgpt-rag-chromadb
       - CHROMADB_PORT=8004
       - RAG_ENV=${RAG_ENV}
-    env_file:
-      - .env
+
     volumes:
       - ../secrets:/secrets:ro
       - ./rag:/app

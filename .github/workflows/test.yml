@@ -5,7 +5,10 @@ on: [push, pull_request]
 jobs:
   test:
     runs-on: ubuntu-latest
-
+    env:
+      GCP_PROJECT: ${{ secrets.GCP_PROJECT }}
+      GOOGLE_APPLICATION_CREDENTIALS: ${{ secrets.GOOGLE_APPLICATION_CREDENTIALS }}
+      RAG_ENV: ${{ secrets.RAG_ENV }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
@@ -21,8 +24,12 @@ jobs:
       - name: Wait for app to fully start
         run: sleep 10
 
-      - name: Run integration tests
-        run: docker exec rag-test pipenv run pytest tests/ -v
+    - name: Show container logs if app crashes
+      if: failure()
+      run: docker logs rag-test
+
+    - name: Run integration tests
+      run: docker exec rag-test pipenv run pytest tests/ -v
 
       - name: Tear down containers
         if: always()
