@@ -1,19 +1,12 @@
 #!/bin/bash
+set -e
 
-echo "Container is running!!!"
+echo "[entrypoint] Container started at $(date)"
+echo "[entrypoint] Checking .env..."
+cat .env || echo "No .env file found"
 
-# args="$@"
-# echo $args
-
-# if [[ -z ${args} ]]; 
-# then
-#     pipenv shell
-# else
-#   pipenv run python rag.py #$args
-# fi
-# pipenv run python rag.py
-
-pipenv run uvicorn rag:app --host 0.0.0.0 --port 9000
-echo "API is now running... "
-echo "Use http://localhost:9000/rag/str for string input"
-echo "Use http://localhost:9000/rag for json input"
+echo "[entrypoint] Starting uvicorn..."
+pipenv run uvicorn rag:app --host 0.0.0.0 --port 9000 || {
+  echo "[entrypoint] ERROR: Failed to start uvicorn"
+  exit 1
+}
