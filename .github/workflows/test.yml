@@ -1,18 +1,41 @@
-  rag-test:
-    build:
-      context: ./rag
-      dockerfile: Dockerfile
-    image: couchgpt-rag-cli
-    container_name: rag-test
-    depends_on:
-      - chromadb
-    ports:
-      - "8088:9000"
-    env_file:
-      - .env
-    volumes:
-      - ../secrets:/secrets:ro
-      - ./rag:/app
-    working_dir: /app
-    entrypoint: ""
-    command: ["pipenv", "run", "uvicorn", "rag:app", "--host", "0.0.0.0", "--port", "9000"]
+name: RAG API Tests
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Create .env file from GitHub secrets
+        run: |
+          echo "GCP_PROJECT=${{ secrets.GCP_PROJECT }}" >> .env
+          echo "GOOGLE_APPLICATION_CREDENTIALS=${{ secrets.GOOGLE_APPLICATION_CREDENTIALS }}" >> .env
+          echo "RAG_ENV=${{ secrets.RAG_ENV }}" >> .env
+
+      - name: Install Docker Compose
+        run: |
+          sudo curl -L "https://github.com/docker/compose/releases/latest/download/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+          sudo chmod +x /usr/local/bin/docker-compose
+
+      - name: Build and start containers
+        run: docker-compose -f docker-compose.test.yml up -d --build
+
+      - name: Wait for app to fully start
+        run: sleep 10
+
+      - name: Show container logs if app crashes
+        if: failure()
+        run: docker logs rag-test
+
+      - name: Run integration tests
+        run: docker exec rag-test pipenv run pytest tests/ -v
+
+      - name: Tear down containers
+        if: always()
+        run: docker-compose -f docker-compose.test.yml down
