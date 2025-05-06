@@ -5,14 +5,16 @@ on: [push, pull_request]
 jobs:
   test:
     runs-on: ubuntu-latest
-    env:
-      GCP_PROJECT: ${{ secrets.GCP_PROJECT }}
-      GOOGLE_APPLICATION_CREDENTIALS: ${{ secrets.GOOGLE_APPLICATION_CREDENTIALS }}
-      RAG_ENV: ${{ secrets.RAG_ENV }}
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
+
+      - name: Create .env file from GitHub secrets
+        run: |
+          echo "GCP_PROJECT=${{ secrets.GCP_PROJECT }}" >> .env
+          echo "GOOGLE_APPLICATION_CREDENTIALS=${{ secrets.GOOGLE_APPLICATION_CREDENTIALS }}" >> .env
+          echo "RAG_ENV=${{ secrets.RAG_ENV }}" >> .env
 
       - name: Install Docker Compose
         run: |
