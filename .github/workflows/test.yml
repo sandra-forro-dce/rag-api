@@ -19,8 +19,8 @@ jobs:
     - name: Write GCP credentials file
       run: |
         mkdir -p secrets
-        echo '${{ secrets.GCP_KEY_JSON }}' > secrets/deployment.json
-
+        echo "${{ secrets.GCP_KEY_JSON_B64 }}" | base64 -d > secrets/deployment.json
+        
     - name: Install Docker Compose
       run: |
         sudo curl -L "https://github.com/docker/compose/releases/latest/download/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
@@ -36,6 +36,13 @@ jobs:
 
     - name: Show container logs if container crashes early
       run: docker logs rag-test || true
+
+    - name: List containers (check if rag-test is running)
+      run: docker ps -a
+
+    - name: Show logs from rag-test container
+      run: docker logs rag-test || true
+
 
     - name: Run integration tests
       run: docker exec rag-test pipenv run pytest tests/ -v
