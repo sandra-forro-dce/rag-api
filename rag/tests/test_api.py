@@ -37,7 +37,7 @@ def test_rag_json_with_invalid_method():
     response = client.post("/rag", json=payload)
     assert response.status_code in [400, 422]  
 
-    def test_rag_json_missing_question():
+def test_rag_json_missing_question():
     payload = {
         "method": "recursive-split"
     }

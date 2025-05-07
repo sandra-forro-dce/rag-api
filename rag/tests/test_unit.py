@@ -1,3 +1,6 @@
+import sys, os
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
+
 from unittest.mock import patch, MagicMock
 from rag import generate_query_embedding, generate_text_embeddings, chat
 
