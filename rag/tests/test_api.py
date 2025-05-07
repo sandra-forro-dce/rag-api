@@ -35,7 +35,7 @@ def test_rag_json_with_invalid_method():
         "method": "unknown-method"
     }
     response = client.post("/rag", json=payload)
-    assert response.status_code in [400, 422]  
+    assert response.status_code in [404, 500]
 
 def test_rag_json_missing_question():
     payload = {

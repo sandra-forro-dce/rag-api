@@ -21,7 +21,8 @@ def test_generate_query_embedding(mock_model):
 def test_generate_text_embeddings_success(mock_model):
     mock_embedding = MagicMock()
     mock_embedding.values = [0.5] * 256
-    mock_model.get_embeddings.return_value = [mock_embedding, mock_embedding]
+    mock_model.get_embeddings.side_effect = lambda inputs, **kwargs: [mock_embedding for _ in inputs]
+
 
     chunks = ["Chunk 1", "Chunk 2"]
     result = generate_text_embeddings(chunks, batch_size=1)
