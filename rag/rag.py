@@ -11,6 +11,8 @@ from google.cloud import storage
 from fastapi import FastAPI
 from pydantic import BaseModel
 from contextlib import asynccontextmanager
+from typing import Literal
+
 
 # Vertex AI
 import vertexai
@@ -348,7 +350,7 @@ def main(args=None):
 #### FastAPI route for inference
 class RAGRequest(BaseModel):
     question: str
-    method: str = "recursive-split"
+    method: Literal["char-split", "recursive-split"] = "recursive-split"
 # @app.on_event("startup")
 
 @asynccontextmanager
