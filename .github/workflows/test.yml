@@ -44,8 +44,9 @@ jobs:
       run: docker logs rag-test || true
 
 
-    - name: Run integration tests
-      run: docker exec rag-test pipenv run pytest tests/ -v
+    - name: Run all tests
+      run: |
+        docker exec rag-test pipenv run pytest tests/ -v
 
     - name: Tear down containers
       if: always()

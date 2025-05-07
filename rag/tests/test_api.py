@@ -28,3 +28,21 @@ def test_rag_json():
     assert response.status_code == 200
     assert isinstance(response.text, str)
     assert len(response.text.strip()) > 0
+
+def test_rag_json_with_invalid_method():
+    payload = {
+        "question": "How to sleep better?",
+        "method": "unknown-method"
+    }
+    response = client.post("/rag", json=payload)
+    assert response.status_code in [400, 422]  
+
+    def test_rag_json_missing_question():
+    payload = {
+        "method": "recursive-split"
+    }
+    response = client.post("/rag", json=payload)
+    assert response.status_code == 422
+
+
+
