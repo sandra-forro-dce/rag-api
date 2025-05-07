@@ -392,7 +392,11 @@ def rag_string(question: str):
 
 @app.post("/rag")
 def rag_json(req: RAGRequest):
-	return chat(question=req.question, method=req.method)
+    valid_methods = ["char-split", "recursive-split"]
+    if req.method not in valid_methods:
+        return {"error": f"Unsupported method '{req.method}'"}, 422
+
+    return chat(question=req.question, method=req.method)
 
 ##### Main CLI with argparse
 if __name__ == "__main__":
