@@ -4,7 +4,7 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")
 from unittest.mock import patch, MagicMock
 from rag import generate_query_embedding, generate_text_embeddings, chat
 
-# ---- Test generate_query_embedding ----
+# Test generate_query_embedding 
 @patch("rag.embedding_model")
 def test_generate_query_embedding(mock_model):
     mock_embedding = MagicMock()
@@ -16,7 +16,7 @@ def test_generate_query_embedding(mock_model):
     assert len(result) == 256
     assert result[0] == 0.1
 
-# ---- Test generate_text_embeddings ----
+# Test generate_text_embeddings 
 @patch("rag.embedding_model")
 def test_generate_text_embeddings_success(mock_model):
     mock_embedding = MagicMock()
@@ -30,7 +30,7 @@ def test_generate_text_embeddings_success(mock_model):
     assert len(result) == 2
     assert all(len(vec) == 256 for vec in result)
 
-# ---- Test chat function ----
+# Test chat function
 @patch("rag.generative_model.generate_content")
 @patch("rag.chromadb.HttpClient")
 @patch("rag.generate_query_embedding")
