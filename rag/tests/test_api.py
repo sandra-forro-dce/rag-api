@@ -35,7 +35,9 @@ def test_rag_json_with_invalid_method():
     }
     response = client.post("/rag", json=payload)
     assert response.status_code == 422
-    assert "unsupported" in response.text.lower()
+    assert "char-split" in response.text.lower()
+    assert "recursive-split" in response.text.lower()
+
 
 
 def test_rag_json_missing_question():
