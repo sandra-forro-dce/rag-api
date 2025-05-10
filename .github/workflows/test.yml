@@ -10,6 +10,12 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v3
 
+    - name: Install ruff
+      run: pip install ruff
+
+    - name: Run ruff linting
+      run: ruff check .
+      
     - name: Create .env file from GitHub secrets
       run: |
         echo "GCP_PROJECT=${{ secrets.GCP_PROJECT }}" >> .env
