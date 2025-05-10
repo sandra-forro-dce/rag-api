@@ -14,8 +14,8 @@ jobs:
       run: pip install ruff
 
     - name: Run ruff linting
-      run: ruff check .
-      
+      run: ruff check . --fix
+
     - name: Create .env file from GitHub secrets
       run: |
         echo "GCP_PROJECT=${{ secrets.GCP_PROJECT }}" >> .env
